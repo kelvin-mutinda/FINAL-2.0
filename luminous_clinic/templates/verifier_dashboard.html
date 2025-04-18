@@ -1,0 +1,117 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/verifier_dashboard.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifier Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/verifier_dashboard.css' %}">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <h1>Verifier Dashboard</h1>
+            <div class="app-header-actions">
+                <button onclick="toggleProfileDropdown()">
+                    {{ user.verifier_profile.full_name }}
+                </button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <a href="{% url 'verifier_dashboard' %}">Edit Profile</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </header>
+        <div class="app-body">
+            <div class="app-body-main-content">
+                <h1>Pending Doctor Approvals</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Profile Picture</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Selected Service</th>
+                            <th>Verification Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in pending_doctors %}
+                            <tr>
+                                <td>
+                                    {% if doctor.profile_picture %}
+                                        <img src="{{ doctor.profile_picture.url }}" alt="Profile Picture" style="width: 50px; height: 50px;">
+                                    {% else %}
+                                        <img src="{% static 'images/default_avatar.png' %}" alt="Default Avatar" style="width: 50px; height: 50px;">
+                                    {% endif %}
+                                </td>
+                                <td>{{ doctor.user.email }}</td>
+                                <td>{{ doctor.full_name }}</td>
+                                <td>{{ doctor.selected_service.service_name }}</td>
+                                <td>
+                                    {% if doctor.verification_documents %}
+                                        <a href="{{ doctor.verification_documents.url }}">Document</a>
+                                    {% else %}
+                                        No Document
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button onclick="approveDoctor({{ doctor.id }})">Verify</button>
+                                    <button onclick="rejectDoctor({{ doctor.id }})">Disqualify</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        function approveDoctor(doctorId) {
+            fetch(`/approve-doctor/${doctorId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to approve doctor');
+                }
+            });
+        }
+        function rejectDoctor(doctorId) {
+            const reason = prompt('Enter reason for disqualification:');
+            if (reason) {
+                fetch(`/reject-doctor/${doctorId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to disqualify doctor');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

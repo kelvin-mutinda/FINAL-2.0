@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medical Records</title>
+    <link rel="stylesheet" href="{% static 'css/medical_records.css' %}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="logo">
+                <img src="{% static 'images/health.PNG' %}" alt="Logo">
+            </div>
+            <div class="quick-access">
+                <div class="icon" title="Notifications">
+                    <img src="{% static 'images/notification-icon.png' %}" alt="Notifications">
+                </div>
+                <div class="icon" title="Messaging">
+                    <img src="{% static 'images/message-icon.png' %}" alt="Messaging">
+                </div>
+                <div class="icon" title="Help/Support">
+                    <img src="{% static 'images/help-icon.png' %}" alt="Help/Support">
+                </div>
+            </div>
+            <div class="profile-menu">
+                <div class="avatar" onclick="toggleProfileDropdown()">
+                    <img src="{% static 'images/avatar.png' %}" alt="Avatar">
+                </div>
+                <div class="dropdown-content" id="profileDropdown">
+                    <p>{{ user.email }}</p>
+                    <p>{{ user.patient_profile.full_name }}</p>
+                    <a href="{% url 'patient_profile' %}">Profile Settings</a>
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+            </div>
+        </header>
+        <div class="sidebar">
+            <ul class="menu">
+                <li><a href="{% url 'patient_dashboard' %}"><img src="{% static 'images/dashboard-icon.png' %}" alt="Dashboard"> Dashboard Home</a></li>
+                <li><a href="{% url 'upcoming_appointments' %}"><img src="{% static 'images/appointment-icon.png' %}" alt="Appointments"> Appointments</a></li>
+                <li><a href="{% url 'virtual_consultations' %}"><img src="{% static 'images/video-call-icon.png' %}" alt="Virtual Consultations"> Virtual Consultations</a></li>
+                <li><a href="{% url 'medical_records' %}"><img src="{% static 'images/medical-record-icon.png' %}" alt="Medical Records"> Medical Records</a></li>
+                <li><a href="{% url 'messaging' %}"><img src="{% static 'images/message-icon.png' %}" alt="Messaging"> Messaging</a></li>
+                <li><a href="{% url 'billing' %}"><img src="{% static 'images/billing-icon.png' %}" alt="Billing & Payments"> Billing & Payments</a></li>
+                <li><a href="{% url 'health_monitoring' %}"><img src="{% static 'images/health-monitoring-icon.png' %}" alt="Health Monitoring"> Health Monitoring</a></li>
+                <li><a href="{% url 'resources' %}"><img src="{% static 'images/resource-icon.png' %}" alt="Resources & Support"> Resources & Support</a></li>
+                <li><a href="{% url 'notifications' %}"><img src="{% static 'images/notification-icon.png' %}" alt="Notifications"> Notifications</a></li>
+            </ul>
+        </div>
+        <div class="content">
+            <h1>Medical Records</h1>
+            <div class="tabs">
+                <button class="tab-button active" onclick="openTab(event, 'general')">General Medical History</button>
+                <button class="tab-button" onclick="openTab(event, 'lab-results')">Lab Results & Imaging</button>
+                <button class="tab-button" onclick="openTab(event, 'prescriptions')">Prescriptions</button>
+            </div>
+            <div id="general" class="tab-content active">
+                <h2>General Medical History</h2>
+                <p>Diagnoses, Allergies, Conditions</p>
+                <ul>
+                    {% for record in records %}
+                        <li>
+                            <strong>{{ record.findings }}</strong> - {{ record.timestamp|date:"d M. Y" }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div id="lab-results" class="tab-content">
+                <h2>Lab Results & Imaging</h2>
+                <p>Upload and view lab results and imaging reports</p>
+                <ul>
+                    <!-- Placeholder for lab results and imaging reports -->
+                    <li>Lab Result: Blood Test - 2023-10-01</li>
+                    <li>Imaging Report: X-Ray - 2023-10-05</li>
+                </ul>
+                <div class="upload-section">
+                    <h3>Upload Documents</h3>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="file" name="document" required>
+                        <button type="submit">Upload</button>
+                    </form>
+                </div>
+            </div>
+            <div id="prescriptions" class="tab-content">
+                <h2>Prescriptions</h2>
+                <p>View and request refills for prescriptions</p>
+                <ul>
+                    {% for prescription in prescriptions %}
+                        <li>
+                            {{ prescription.medication }} - {{ prescription.dosage }} - {{ prescription.issued_at|date:"d M. Y" }}
+                            <a href="{% url 'order_prescription' prescription.pk %}" class="request-refill">Request Refill</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="download-section">
+                    <h3>Download Records</h3>
+                    <a href="#" class="download-button">Download All Prescriptions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        // Close the dropdown if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.avatar')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+        function openTab(evt, tabName) {
+            var i, tabContent, tabButtons;
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+                tabContent[i].classList.remove("active");
+            }
+            tabButtons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+            document.getElementById(tabName).style.display = "block";
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html>

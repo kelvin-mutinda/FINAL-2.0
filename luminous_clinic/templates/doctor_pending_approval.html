@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pending Approval</title>
+    <link rel="stylesheet" href="{% static 'css/doctor_pending_approval.css' %}">
+</head>
+<body>
+    <header>
+        <a href="{% url 'landing_page' %}" class="home-button">Home</a>
+    </header>
+    <div class="pending-approval-container">
+        <h1>Your Profile is Pending Approval</h1>
+        <p>Please wait for a verifier to review your profile.</p>
+    </div>
+</body>
+</html>

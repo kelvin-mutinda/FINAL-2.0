@@ -1,0 +1,273 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/doctor_dashboard.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/doctor_dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{% static 'js/doctor_dashboard.js' %}" defer></script>
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-header-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Luminous Virtual Clinic Logo">
+                <h1>Welcome, {{ user.doctor_profile.full_name }}</h1>
+            </div>
+            <div class="app-header-actions">
+                <button onclick="toggleNotifications()">Notifications</button>
+                <button onclick="toggleProfileDropdown()">Profile</button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <a href="{% url 'doctor_profile_setup' %}">Edit Profile</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </header>
+        <aside class="sidebar">
+            <ul>
+                <li><a href="#home" onclick="loadContent('home')">Home</a></li>
+                <li><a href="#consultation-requests" onclick="loadContent('consultation-requests')">Consultation Requests</a></li>
+                <li><a href="#active-consultation" onclick="loadContent('active-consultation')">Active Consultation</a></li>
+                <li><a href="#payments" onclick="loadContent('payments')">Payments</a></li>
+                <li><a href="#my-notes" onclick="loadContent('my-notes')">My Notes</a></li>
+                <li><a href="#my-profile" onclick="loadContent('my-profile')">My Profile</a></li>
+            </ul>
+        </aside>
+        <main class="app-body">
+            <div class="app-body-main-content" id="main-content">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+        </main>
+    </div>
+    <script>
+        function toggleNotifications() {
+            alert('Notifications');
+        }
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        function loadContent(section) {
+            const contentDiv = document.getElementById('main-content');
+            switch (section) {
+                case 'home':
+                    contentDiv.innerHTML = `
+                        <h1>Home</h1>
+                        <p>Welcome to your doctor dashboard!</p>
+                        <div class="summary-widgets">
+                            <div class="widget">
+                                <h2>Pending Requests</h2>
+                                <p>${{ pending_count }}</p>
+                            </div>
+                            <div class="widget">
+                                <h2>Active Consultations</h2>
+                                <p>${{ accepted_count }}</p>
+                            </div>
+                            <div class="widget">
+                                <h2>Completed Consultations</h2>
+                                <p>${{ completed_count }}</p>
+                            </div>
+                        </div>
+                        <button class="quick-action">Quick Action</button>
+                    `;
+                    break;
+                case 'consultation-requests':
+                    contentDiv.innerHTML = `
+                        <h1>Consultation Requests</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Location</th>
+                                    <th>Age</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ booking.patient.full_name }}</td>
+                                        <td>{{ booking.patient.location }}</td>
+                                        <td>{{ booking.patient.age }}</td>
+                                        <td>
+                                            <button onclick="acceptBooking({{ booking.id }})">Accept</button>
+                                            <button onclick="rejectBooking({{ booking.id }})">Reject</button>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4">No consultation requests available</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+                case 'active-consultation':
+                    contentDiv.innerHTML = `
+                        <h1>Active Consultation</h1>
+                        <div id="chat-box">
+                            <ul id="messages">
+                                {% for message in active_consultation.messages.all %}
+                                    <li class="{{ message.sender.role }}">
+                                        <strong>{{ message.sender.full_name }}:</strong> {{ message.message }}<br>
+                                        <small>{{ message.timestamp|date:"d M. Y H:i" }}</small>
+                                    </li>
+                                {% empty %}
+                                    <li>No chat messages found for this appointment.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <form id="chat-form">
+                            <input type="text" id="message-input" placeholder="Type a message..." required>
+                            <button type="submit">Send</button>
+                        </form>
+                        <button onclick="endService()">End Consultation</button>
+                    `;
+                    break;
+                case 'payments':
+                    contentDiv.innerHTML = `
+                        <h1>Payments</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                    <tr>
+                                        <td>{{ payment.transaction_id }}</td>
+                                        <td>{{ payment.amount }}</td>
+                                        <td>{{ payment.payment_status }}</td>
+                                        <td>{{ payment.method }}</td>
+                                        <td>
+                                            <button>View Details</button>
+                                            <button>Download Receipt</button>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5">No payments available</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+                case 'my-notes':
+                    contentDiv.innerHTML = `
+                        <h1>My Notes</h1>
+                        <form id="note-form">
+                            <textarea id="note-input" placeholder="Write a note..."></textarea>
+                            <button type="submit">Add Note</button>
+                        </form>
+                        <ul id="notes-list">
+                            {% for note in notes %}
+                                <li>
+                                    <p>{{ note.text }}</p>
+                                    <button onclick="editNote({{ note.pk }})">Edit</button>
+                                    <button onclick="deleteNote({{ note.pk }})">Delete</button>
+                                </li>
+                            {% empty %}
+                                <li>No notes available</li>
+                            {% endfor %}
+                        </ul>
+                    `;
+                    break;
+                case 'my-profile':
+                    contentDiv.innerHTML = `
+                        <h1>My Profile</h1>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit">Save</button>
+                        </form>
+                        <h2>Approval Status</h2>
+                        <p>{% if user.doctor_profile.approved %}Approved{% else %}Pending{% endif %}</p>
+                        <h2>View Schedule</h2>
+                        <button onclick="viewSchedule()">View Schedule</button>
+                    `;
+                    break;
+            }
+        }
+        function acceptBooking(bookingId) {
+            fetch(`/accept-booking/${bookingId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to accept booking');
+                }
+            });
+        }
+        function rejectBooking(bookingId) {
+            const reason = prompt('Enter reason for rejection:');
+            if (reason) {
+                fetch(`/reject-booking/${bookingId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to reject booking');
+                    }
+                });
+            }
+        }
+        function endService() {
+            fetch(`/end-service/${active_consultation.pk}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "doctor_dashboard" %}';
+                } else {
+                    alert('Failed to end service');
+                }
+            });
+        }
+        function viewSchedule() {
+            alert('Viewing schedule...');
+        }
+        function editNote(noteId) {
+            alert('Editing note ' + noteId);
+        }
+        function deleteNote(noteId) {
+            alert('Deleting note ' + noteId);
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContent('home');
+        });
+    </script>
+</body>
+</html>

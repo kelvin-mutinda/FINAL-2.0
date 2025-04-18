@@ -1,0 +1,196 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/dashboards/search_results.html -->
+{% load static %}  <!-- Load the static template tag -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="{% static 'css/patient_dashboard.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/ionicons@5.5.2/dist/ionicons.min.css">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-header-logo">
+                <div class="logo">
+                    <span class="logo-icon">
+                        <img src="{% static 'images/health.PNG' %}" alt="Mobile Clinic Logo" />
+                    </span>
+                    <h1 class="logo-title">
+                        <span>Mobile</span>
+                        <span>Clinic</span>
+                    </h1>
+                </div>
+            </div>
+            <div class="app-header-navigation">
+                <div class="tabs">
+                    <a href="{% url 'doctor_dashboard' %}">
+                        Dashboard
+                    </a>
+                    <a href="{% url 'patient_list' %}">
+                        Patients
+                    </a>
+                    <a href="{% url 'manage_appointments' %}">
+                        Appointments
+                    </a>
+                    <a href="{% url 'view_prescriptions' %}">
+                        Prescriptions
+                    </a>
+                    <a href="{% url 'billing' %}">
+                        Payments
+                    </a>
+                    <a href="{% url 'health_reports' %}">
+                        Reports
+                    </a>
+                </div>
+            </div>
+            <div class="app-header-actions">
+                <button class="user-profile" onclick="toggleProfileDropdown()">
+                    <span>{{ user.doctor_profile.full_name }}</span>
+                    <span>
+                        <img src="{% static 'images/avatar.png' %}" alt="Avatar">
+                    </span>
+                </button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <p>{{ user.email }}</p>
+                    <p>{{ user.doctor_profile.full_name }}</p>
+                    <a href="{% url 'doctor_profile' %}">Profile Settings</a>
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+                <div class="app-header-actions-buttons">
+                    <button class="icon-button large" onclick="toggleSearch()">
+                        <ion-icon name="search-outline"></ion-icon>
+                    </button>
+                    <button class="icon-button large">
+                        <ion-icon name="notifications-outline"></ion-icon>
+                    </button>
+                </div>
+            </div>
+            <div class="app-header-mobile">
+                <button class="icon-button large" onclick="toggleSidebar()">
+                    <ion-icon name="menu-outline"></ion-icon>
+                </button>
+            </div>
+        </header>
+        <div class="app-body">
+            <div class="app-body-navigation">
+                <nav class="navigation">
+                    <a href="{% url 'doctor_dashboard' %}">
+                        <ion-icon name="home-outline"></ion-icon>
+                        <span>Home</span>
+                    </a>
+                    <a href="{% url 'patient_list' %}">
+                        <ion-icon name="people-outline"></ion-icon>
+                        <span>My Patients</span>
+                    </a>
+                    <a href="{% url 'manage_appointments' %}">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        <span>Appointments</span>
+                    </a>
+                    <a href="{% url 'view_prescriptions' %}">
+                        <ion-icon name="document-text-outline"></ion-icon>
+                        <span>Prescriptions</span>
+                    </a>
+                    <a href="{% url 'health_reports' %}">
+                        <ion-icon name="analytics-outline"></ion-icon>
+                        <span>Reports & Analytics</span>
+                    </a>
+                    <a href="{% url 'billing' %}">
+                        <ion-icon name="wallet-outline"></ion-icon>
+                        <span>Billing & Payments</span>
+                    </a>
+                    <a href="{% url 'support_faq' %}">
+                        <ion-icon name="help-circle-outline"></ion-icon>
+                        <span>Support & FAQs</span>
+                    </a>
+                </nav>
+                <footer class="footer">
+                    <h1>Mobile Clinic<small>©</small></h1>
+                    <div>
+                        Mobile Clinic ©<br />
+                        All Rights Reserved 2025
+                    </div>
+                </footer>
+            </div>
+            <div class="app-body-main-content">
+                <section class="service-section">
+                    <h2>Search Results</h2>
+                    <p>Showing results for "{{ query }}"</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Doctor</th>
+                                <th>Scheduled Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                                <tr>
+                                    <td>{{ appointment.patient.full_name }}</td>
+                                    <td>{{ appointment.doctor.full_name }}</td>
+                                    <td>{{ appointment.scheduled_time }}</td>
+                                    <td>{{ appointment.status }}</td>
+                                    <td><a href="{% url 'update_appointment' appointment.pk %}">Update</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5">No appointments found for "{{ query }}"</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+            <div class="app-body-sidebar">
+                <section class="payment-section">
+                    <h2>Search Filters</h2>
+                    <div class="payment-section-header">
+                        <p>Refine your search criteria</p>
+                        <div>
+                            <button class="card-button active">
+                                <ion-icon name="funnel-outline"></ion-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="payments">
+                        <form method="get">
+                            <div class="form-group">
+                                <label for="query">Search Query:</label>
+                                <input type="text" id="query" name="q" value="{{ query }}" required>
+                            </div>
+                            <button type="submit">Search</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        function toggleSidebar() {
+            document.querySelector('.app-body-navigation').classList.toggle('collapsed');
+            document.querySelector('.app-body-main-content').classList.toggle('expanded');
+        }
+        function toggleSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.focus();
+        }
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-profile')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

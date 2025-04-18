@@ -1,0 +1,283 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/patient_dashboard.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/patient_dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{% static 'js/patient_dashboard.js' %}" defer></script>
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-header-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Luminous Virtual Clinic Logo">
+                <h1>Welcome, {{ user.patient_profile.full_name }}</h1>
+            </div>
+            <div class="app-header-actions">
+                <button onclick="toggleNotifications()">Notifications</button>
+                <button onclick="toggleProfileDropdown()">Profile</button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <a href="{% url 'patient_profile' %}">Edit Profile</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </header>
+        <aside class="sidebar">
+            <ul>
+                <li><a href="#home" onclick="loadContent('home')">Home</a></li>
+                <li><a href="#consult-doctor" onclick="loadContent('consult-doctor')">Consult a Doctor</a></li>
+                <li><a href="#my-appointments" onclick="loadContent('my-appointments')">My Appointments</a></li>
+                <li><a href="#active-consultation" onclick="loadContent('active-consultation')">Active Consultation</a></li>
+                <li><a href="#payments" onclick="loadContent('payments')">Payments</a></li>
+                <li><a href="#my-notes" onclick="loadContent('my-notes')">My Notes</a></li>
+                <li><a href="#my-profile" onclick="loadContent('my-profile')">My Profile</a></li>
+            </ul>
+        </aside>
+        <main class="app-body">
+            <div class="app-body-main-content" id="main-content">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+        </main>
+    </div>
+    <script>
+        function toggleNotifications() {
+            alert('Notifications');
+        }
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+
+        function loadContent(section) {
+            const contentDiv = document.getElementById('main-content');
+            switch (section) {
+                case 'home':
+                    fetch('/api/home-data/', {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        contentDiv.innerHTML = `
+                            <h1>Home</h1>
+                            <p>Welcome to your patient dashboard!</p>
+                            <div class="summary-widgets">
+                                <div class="widget">
+                                    <h2>Upcoming Appointments</h2>
+                                    <p>${data.pending_bookings_count}</p>
+                                </div>
+                                <div class="widget">
+                                    <h2>Active Consultations</h2>
+                                    <p>${data.accepted_bookings_count}</p>
+                                </div>
+                                <div class="widget">
+                                    <h2>Payments Due</h2>
+                                    <p>0</p>
+                                </div>
+                            </div>
+                            <button class="quick-consult">Quick Consult</button>
+                        `;
+                    });
+                    break;
+                // Other cases...
+
+                    break;
+                case 'consult-doctor':
+                    contentDiv.innerHTML = `
+                        <h1>Consult a Doctor</h1>
+                        <div class="service-cards">
+                            {% for service in services %}
+                                <div class="service-card">
+                                    <h3>{{ service.service_name }}</h3>
+                                    <p>{{ service.description }}</p>
+                                    <button onclick="bookService({{ service.pk }})">Book Now</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    `;
+                    break;
+                case 'my-appointments':
+                    contentDiv.innerHTML = `
+                        <h1>My Appointments</h1>
+                        <div class="tabs">
+                            <button onclick="showTab('upcoming')">Upcoming</button>
+                            <button onclick="showTab('past')">Past</button>
+                        </div>
+                        <div id="upcoming" class="tab-content">
+                            <h2>Upcoming Appointments</h2>
+                            <ul>
+                                {% for booking in pending_bookings %}
+                                    <li>
+                                        <strong>{{ booking.service.service_name }}</strong> - {{ booking.timestamp|date:"d M. Y" }}
+                                        <button onclick="cancelBooking({{ booking.id }})">Cancel</button>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div id="past" class="tab-content" style="display: none;">
+                            <h2>Past Appointments</h2>
+                            <ul>
+                                {% for booking in accepted_bookings %}
+                                    <li>
+                                        <strong>{{ booking.service.service_name }}</strong> - {{ booking.timestamp|date:"d M. Y" }}
+                                        <a href="{% url 'chat' booking_id=booking.pk %}">View Details</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    `;
+                    break;
+                case 'active-consultation':
+                    contentDiv.innerHTML = `
+                        <h1>Active Consultation</h1>
+                        <div id="chat-box">
+                            <ul id="messages">
+                                {% for message in active_consultation.messages.all %}
+                                    <li class="{{ message.sender.role }}">
+                                        <strong>{{ message.sender.full_name }}:</strong> {{ message.message }}<br>
+                                        <small>{{ message.timestamp|date:"d M. Y H:i" }}</small>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <form id="chat-form">
+                            <input type="text" id="message-input" placeholder="Type a message..." required>
+                            <button type="submit">Send</button>
+                        </form>
+                        <button onclick="endService()">End Consultation</button>
+                    `;
+                    break;
+                case 'payments':
+                    contentDiv.innerHTML = `
+                        <h1>Payments</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                    <tr>
+                                        <td>{{ payment.transaction_id }}</td>
+                                        <td>{{ payment.amount }}</td>
+                                        <td>{{ payment.payment_status }}</td>
+                                        <td>{{ payment.method }}</td>
+                                        <td>
+                                            <button>Pay Now</button>
+                                            <button>Download Receipt</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+                case 'my-notes':
+                    contentDiv.innerHTML = `
+                        <h1>My Notes</h1>
+                        <form id="note-form">
+                            <textarea id="note-input" placeholder="Write a note..."></textarea>
+                            <button type="submit">Add Note</button>
+                        </form>
+                        <ul id="notes-list">
+                            {% for note in notes %}
+                                <li>
+                                    <p>{{ note.text }}</p>
+                                    <button onclick="editNote({{ note.pk }})">Edit</button>
+                                    <button onclick="deleteNote({{ note.pk }})">Delete</button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    `;
+                    break;
+                case 'my-profile':
+                    contentDiv.innerHTML = `
+                        <h1>My Profile</h1>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit">Save</button>
+                        </form>
+                        <h2>Medical History</h2>
+                        <ul>
+                            {% for record in medical_records %}
+                                <li>{{ record.findings }} - {{ record.timestamp|date:"d M. Y" }}</li>
+                            {% endfor %}
+                        </ul>
+                        <h2>Change Password</h2>
+                        <form id="change-password-form">
+                            <input type="password" id="current-password" placeholder="Current Password" required>
+                            <input type="password" id="new-password" placeholder="New Password" required>
+                            <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+                            <button type="submit">Change Password</button>
+                        </form>
+                    `;
+                    break;
+            }
+        }
+        function showTab(tabName) {
+            const tabs = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].style.display = 'none';
+            }
+            document.getElementById(tabName).style.display = 'block';
+        }
+        function bookService(serviceId) {
+            // Construct the URL dynamically using JavaScript
+            const url = `/book-service/${serviceId}/`;
+            window.location.href = url;
+        }
+        function cancelBooking(bookingId) {
+            fetch(`/cancel-booking/${bookingId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to cancel booking');
+                }
+            });
+        }
+        function endService() {
+            fetch(`/end-service/${active_consultation.pk}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "patient_dashboard" %}';
+                } else {
+                    alert('Failed to end service');
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContent('home');
+        });
+    </script>
+</body>
+</html>

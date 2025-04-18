@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{% static 'js/chat.js' %}" defer></script>
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            {% if user.role == 'doctor' %}
+                <div class="patient-info">
+                    <img src="{{ booking.patient.profile_picture.url }}" alt="Patient Avatar">
+                    <span>{{ booking.patient.full_name }}</span>
+                    <span>{{ booking.patient.age }}</span>
+                    <span>{{ booking.patient.location }}</span>
+                </div>
+            {% elif user.role == 'patient' %}
+                <div class="doctor-info">
+                    <img src="{{ booking.doctor.profile_picture.url }}" alt="Doctor Avatar">
+                    <span>{{ booking.doctor.full_name }}</span>
+                    <span>{{ booking.service.service_name }}</span>
+                </div>
+            {% endif %}
+            <button onclick="endService()">End Service</button>
+        </header>
+        <div id="chat-box">
+            <ul id="messages">
+                {% for message in booking.messages.all %}
+                    <li class="{{ message.sender.role }}">
+                        <strong>{{ message.sender.full_name }}:</strong> {{ message.message }}<br>
+                        <small>{{ message.timestamp|date:"d M. Y H:i" }}</small>
+                    </li>
+                {% empty %}
+                    <li>No chat messages found for this appointment.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <form id="chat-form">
+            <input type="text" id="message-input" placeholder="Type a message..." required>
+            <button type="submit">Send</button>
+        </form>
+        {% if user.role == 'doctor' %}
+            <div class="menu-options">
+                <button onclick="viewPatientRecords()">View Patient's Records</button>
+                <button onclick="writeFindings()">Write Findings</button>
+                <button onclick="issuePrescription()">Issue Prescription</button>
+                <button onclick="setServiceCost()">Set Service Cost</button>
+            </div>
+        {% endif %}
+    </div>
+    <script>
+        const roomName = '{{ booking.pk }}';
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatSocket = new WebSocket(
+                'ws://' + window.location.host +
+                '/ws/chat/' + roomName + '/'
+            );
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                const messageElement = document.createElement('li');
+                messageElement.textContent = `${data.sender}: ${data.message}`;
+                document.querySelector('#messages').appendChild(messageElement);
+            };
+            document.querySelector('#chat-form').onsubmit = function(e) {
+                e.preventDefault();
+                const messageInputDom = document.querySelector('#message-input');
+                const message = messageInputDom.value;
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'sender': '{{ user.role }}'
+                }));
+                messageInputDom.value = '';
+                return false;
+            };
+        });
+        function endService() {
+            fetch(`/end-service/${roomName}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "patient_dashboard" %}';
+                } else {
+                    alert('Failed to end service');
+                }
+            });
+        }
+        function viewPatientRecords() {
+            alert('Viewing patient records...');
+        }
+        function writeFindings() {
+            alert('Writing findings...');
+        }
+        function issuePrescription() {
+            window.location.href = `{% url 'issue_prescription' booking.pk %}`;
+        }
+        function setServiceCost() {
+            alert('Setting service cost...');
+        }
+    </script>
+</body>
+</html>

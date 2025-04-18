@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminous Virtual Clinic</title>
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <img src="{% static 'images/logo.png' %}" alt="Luminous Virtual Clinic Logo" class="logo">
+            <nav>
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            </nav>
+        </div>
+    </header>
+    <section class="hero">
+        <div class="container">
+            <h1>Welcome to Luminous Virtual Clinic</h1>
+            <p>Your one-stop solution for virtual healthcare services.</p>
+            <div class="actions">
+                <a href="{% url 'register' %}" class="btn btn-primary">Register Now</a>
+                <a href="{% url 'login' %}" class="btn btn-secondary">Login</a>
+            </div>
+        </div>
+    </section>
+    <section class="services">
+        <div class="container">
+            <h2>Our Services</h2>
+            <div class="service-cards">
+                <div class="service-card">
+                    <h3>Symptom-Based Consultations</h3>
+                    <p>Get expert advice on your symptoms from qualified doctors.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Appointment Scheduling</h3>
+                    <p>Easily schedule appointments with doctors for in-person or virtual consultations.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Real-Time Communication</h3>
+                    <p>Engage in real-time video, audio, or chat consultations with doctors.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Payment Integration</h3>
+                    <p>Securely pay for consultations and prescriptions using M-Pesa.</p>
+                </div>
+                <div class="service-card">
+                    <h3>Prescription & Online Pharmacy</h3>
+                    <p>Receive prescriptions and order medications directly from the comfort of your home.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Luminous Virtual Clinic. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

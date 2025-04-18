@@ -1,0 +1,106 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/select_service.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Consult a Doctor</title>
+    <link rel="stylesheet" href="{% static 'css/consult_doctor.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{% static 'js/consult_doctor.js' %}" defer></script>
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-header-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Luminous Virtual Clinic Logo">
+                <h1>Welcome, {{ user.patient_profile.full_name }}</h1>
+            </div>
+            <div class="app-header-actions">
+                <button onclick="toggleNotifications()">Notifications</button>
+                <button onclick="toggleProfileDropdown()">Profile</button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <a href="{% url 'patient_profile' %}">Edit Profile</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </header>
+        <aside class="sidebar">
+            <ul>
+                <li><a href="#home" onclick="loadContent('home')">Home</a></li>
+                <li><a href="#consult-doctor" onclick="loadContent('consult-doctor')">Consult a Doctor</a></li>
+                <li><a href="#my-appointments" onclick="loadContent('my-appointments')">My Appointments</a></li>
+                <li><a href="#active-consultation" onclick="loadContent('active-consultation')">Active Consultation</a></li>
+                <li><a href="#payments" onclick="loadContent('payments')">Payments</a></li>
+                <li><a href="#my-notes" onclick="loadContent('my-notes')">My Notes</a></li>
+                <li><a href="#my-profile" onclick="loadContent('my-profile')">My Profile</a></li>
+            </ul>
+        </aside>
+        <main class="app-body">
+            <div class="app-body-main-content" id="main-content">
+                <h1>Consult a Doctor</h1>
+                <div class="service-cards">
+                    {% for service in services %}
+                        <div class="service-card">
+                            <h3>{{ service.service_name }}</h3>
+                            <p>{{ service.description }}</p>
+                            <button onclick="bookService({{ service.pk }})">Book Now</button>
+                        </div>
+                    {% empty %}
+                        <div class="service-card">
+                            <p>No services available</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+    <script>
+        function toggleNotifications() {
+            alert('Notifications');
+        }
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        function bookService(serviceId) {
+            // Check for existing pending booking for the same service
+            axios.post('/check-pending-booking/', {
+                service_id: serviceId
+            })
+            .then(response => {
+                if (response.data.has_pending) {
+                    alert('You already have a pending booking for this service.');
+                } else {
+                    // Submit the booking request with CSRF token
+                    axios.post(/book-service/${serviceId}/, {}, {
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => {
+                        if (response.data.success) {
+                            window.location.href = '{% url "patient_dashboard" %}';
+                        } else {
+                            alert('Failed to book service');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('There was an error!', error);
+                        alert('An error occurred. Please try again later.');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('There was an error!', error);
+                alert('An error occurred. Please try again later.');
+            });
+        }
+    </script>
+</body>
+</html>

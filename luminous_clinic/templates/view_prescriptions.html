@@ -1,0 +1,36 @@
+{% load static %}  <!-- Load the static template tag -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Prescriptions</title>
+    <link rel="stylesheet" href="{% static 'css/view_prescriptions.css' %}">
+</head>
+<body>
+    <h1>Prescriptions</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Issued At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prescription in prescriptions %}
+                <tr>
+                    <td>{{ prescription.patient.full_name }}</td>
+                    <td>{{ prescription.doctor.full_name }}</td>
+                    <td>{{ prescription.medication }}</td>
+                    <td>{{ prescription.dosage }}</td>
+                    <td>{{ prescription.issued_at }}</td>
+                    <td><a href="{% url 'order_prescription' prescription.pk %}">Order</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

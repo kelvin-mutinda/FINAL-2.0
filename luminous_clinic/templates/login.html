@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="{% url 'landing_page' %}" class="home-button">Home</a>
+        </div>
+    </header>
+    <div class="login-container">
+        <h1>Login</h1>
+        {% if form.errors %}
+            <p class="error">Invalid credentials. Please try again.</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label for="username">Email:</label>
+            <input type="email" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <div class="password-field">
+                <input type="password" id="password" name="password" required>
+                <button type="button" onclick="togglePasswordVisibility()">Show</button>
+            </div>
+            <label for="role">Role:</label>
+            <select id="role" name="role" required>
+                <option value="patient" selected>Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="verifier">Verifier</option>
+            </select>
+            <button type="submit">Login</button>
+            <div class="links">
+                <a href="{% url 'register' %}">Register if you have no account</a>
+                <a href="{% url 'password_reset' %}">Forgot Password?</a>
+            </div>
+        </form>
+    </div>
+    <script>
+        function togglePasswordVisibility() {
+            var passwordField = document.getElementById('password');
+            var toggleButton = document.querySelector('.password-field button');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleButton.textContent = 'Hide';
+            } else {
+                passwordField.type = 'password';
+                toggleButton.textContent = 'Show';
+            }
+        }
+    </script>
+</body>
+</html>

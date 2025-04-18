@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Prescription</title>
+    <link rel="stylesheet" href="{% static 'css/create_prescription.css' %}">
+</head>
+<body>
+    <h1>Create Prescription for {{ booking.patient.full_name }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Prescription</button>
+    </form>
+</body>
+</html>

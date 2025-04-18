@@ -1,0 +1,1 @@
+default_app_config = 'luminous_clinic.apps.LuminousClinicConfig'

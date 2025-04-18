@@ -1,0 +1,332 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Details</title>
+    <link rel="stylesheet" href="{% static 'css/appointment_details.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/ionicons@5.5.2/dist/ionicons.min.css">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="app-header-logo">
+                <div class="logo">
+                    <span class="logo-icon">
+                        <img src="{% static 'images/health.PNG' %}" alt="Mobile Clinic Logo" />
+                    </span>
+                    <h1 class="logo-title">
+                        <span>Mobile</span>
+                        <span>Clinic</span>
+                    </h1>
+                </div>
+            </div>
+            <div class="app-header-navigation">
+                <div class="tabs">
+                    <a href="{% url 'patient_dashboard' %}">
+                        Dashboard
+                    </a>
+                    <a href="{% url 'view_prescriptions' %}">
+                        Prescriptions & Payments
+                    </a>
+                    <a href="{% url 'doctor_list' %}">
+                        Doctors
+                    </a>
+                    <a href="{% url 'medical_records' %}">
+                        Medical Records
+                    </a>
+                    <a href="{% url 'manage_appointments' %}">
+                        Appointments
+                    </a>
+                    <a href="{% url 'health_reports' %}">
+                        Health Reports
+                    </a>
+                    <a href="{% url 'support_faq' %}">
+                        Support & FAQs
+                    </a>
+                </div>
+            </div>
+            <div class="app-header-actions">
+                <button class="user-profile" onclick="toggleProfileDropdown()">
+                    <span>{{ user.full_name }}</span>
+                    <span>
+                        <img src="{% static 'images/avatar.png' %}" alt="Avatar">
+                    </span>
+                </button>
+                <div class="dropdown-content" id="profileDropdown">
+                    <p>{{ user.email }}</p>
+                    <p>{{ user.full_name }} - {{ user.role|capfirst }}</p>
+                    {% if user.role == 'patient' %}
+                        <a href="{% url 'patient_profile' %}">Profile Settings</a>
+                        <a href="{% url 'medical_records' %}">View Medical History</a>
+                    {% elif user.role == 'doctor' %}
+                        <a href="{% url 'doctor_profile' %}">Profile Settings</a>
+                        <a href="{% url 'consultation_history' %}">View Consultation History</a>
+                    {% elif user.role == 'admin' %}
+                        <a href="{% url 'complete_profile' %}">Edit Profile</a>
+                        <a href="#">View System Logs</a>
+                        <a href="#">Manage Staff</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+                <div class="app-header-actions-buttons">
+                    <button class="icon-button large" onclick="toggleSearch()">
+                        <ion-icon name="search-outline"></ion-icon>
+                    </button>
+                    <button class="icon-button large">
+                        <ion-icon name="notifications-outline"></ion-icon>
+                    </button>
+                </div>
+            </div>
+            <div class="app-header-mobile">
+                <button class="icon-button large" onclick="toggleSidebar()">
+                    <ion-icon name="menu-outline"></ion-icon>
+                </button>
+            </div>
+        </header>
+        <div class="app-body">
+            <div class="app-body-navigation">
+                <nav class="navigation">
+                    <a href="{% url 'patient_dashboard' %}">
+                        <ion-icon name="home-outline"></ion-icon>
+                        <span>Home</span>
+                    </a>
+                    <a href="{% url 'manage_appointments' %}">
+                        <ion-icon name="calendar-outline"></ion-icon>
+                        <span>My Appointments</span>
+                    </a>
+                    <a href="{% url 'doctor_list' %}">
+                        <ion-icon name="people-outline"></ion-icon>
+                        <span>Find a Doctor</span>
+                    </a>
+                    <a href="{% url 'medical_records' %}">
+                        <ion-icon name="clipboard-outline"></ion-icon>
+                        <span>Medical Records</span>
+                    </a>
+                    <a href="{% url 'health_reports' %}">
+                        <ion-icon name="analytics-outline"></ion-icon>
+                        <span>Health Reports</span>
+                    </a>
+                    <a href="{% url 'billing' %}">
+                        <ion-icon name="wallet-outline"></ion-icon>
+                        <span>Billing & Payments</span>
+                    </a>
+                    <a href="{% url 'support_faq' %}">
+                        <ion-icon name="help-circle-outline"></ion-icon>
+                        <span>Support & FAQs</span>
+                    </a>
+                </nav>
+                <footer class="footer">
+                    <h1>Mobile Clinic<small>©</small></h1>
+                    <div>
+                        Mobile Clinic ©<br />
+                        All Rights Reserved 2025
+                    </div>
+                </footer>
+            </div>
+            <div class="app-body-main-content">
+                <h1>Appointment Details</h1>
+                <div class="appointment-info">
+                    <h2>Patient Information</h2>
+                    <div class="info-card">
+                        <img src="{% static 'images/patient_avatar.png' %}" alt="Patient Avatar">
+                        <div class="info-details">
+                            <h3>{{ appointment.patient.full_name }}</h3>
+                            <p><strong>Email:</strong> {{ appointment.patient.user.email }}</p>
+                            <p><strong>Phone Number:</strong> {{ appointment.patient.phone_number }}</p>
+                            <p><strong>Gender:</strong> {{ appointment.patient.gender }}</p>
+                            <p><strong>Date of Birth:</strong> {{ appointment.patient.date_of_birth|date:"d M. Y" }}</p>
+                            <p><strong>Address:</strong> {{ appointment.patient.address }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Doctor Information</h2>
+                    <div class="info-card">
+                        <img src="{% static 'images/doctor_avatar.png' %}" alt="Doctor Avatar">
+                        <div class="info-details">
+                            <h3>{{ appointment.service.doctor_profile.full_name }}</h3>
+                            <p><strong>Email:</strong> {{ appointment.service.doctor_profile.user.email }}</p>
+                            <p><strong>Phone Number:</strong> {{ appointment.service.doctor_profile.phone_number }}</p>
+                            <p><strong>Gender:</strong> {{ appointment.service.doctor_profile.gender }}</p>
+                            <p><strong>Specialization:</strong> {{ appointment.service.doctor_profile.medical_specialization }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Appointment Information</h2>
+                    <div class="info-card">
+                        <div class="info-details">
+                            <p><strong>Scheduled Time:</strong> {{ appointment.scheduled_time|date:"d M. Y H:i" }}</p>
+                            <p><strong>Status:</strong> {{ appointment.status }}</p>
+                            <p><strong>Service Type:</strong> {{ appointment.service.service_name }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Prescriptions</h2>
+                    <div class="info-card">
+                        <div class="info-details">
+                            <ul>
+                                {% for prescription in appointment.prescriptions.all %}
+                                    <li>
+                                        <strong>Medication:</strong> {{ prescription.medication }}<br>
+                                        <strong>Dosage:</strong> {{ prescription.dosage }}<br>
+                                        <strong>Issued At:</strong> {{ prescription.issued_at|date:"d M. Y H:i" }}
+                                    </li>
+                                {% empty %}
+                                    <li>No prescriptions issued for this appointment.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Medical Records</h2>
+                    <div class="info-card">
+                        <div class="info-details">
+                            <ul>
+                                {% for record in appointment.patient.records.all %}
+                                    <li>
+                                        <strong>Findings:</strong> {{ record.findings }}<br>
+                                        <strong>Timestamp:</strong> {{ record.timestamp|date:"d M. Y H:i" }}
+                                    </li>
+                                {% empty %}
+                                    <li>No medical records found for this patient.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Payments</h2>
+                    <div class="info-card">
+                        <div class="info-details">
+                            <ul>
+                                {% for payment in appointment.payments.all %}
+                                    <li>
+                                        <strong>Amount:</strong> ${{ payment.amount }}<br>
+                                        <strong>Status:</strong> {{ payment.status }}<br>
+                                        <strong>Paid At:</strong> {{ payment.paid_at|date:"d M. Y H:i" }}
+                                    </li>
+                                {% empty %}
+                                    <li>No payments made for this appointment.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-info">
+                    <h2>Chat Messages</h2>
+                    <div class="info-card">
+                        <div class="info-details">
+                            <ul id="messages">
+                                {% for message in booking.messages.all %}
+                                    <li class="{{ message.sender.role }}">
+                                        <strong>{{ message.sender.full_name }}:</strong> {{ message.message }}<br>
+                                        <small>{{ message.timestamp|date:"d M. Y H:i" }}</small>
+                                    </li>
+                                {% empty %}
+                                    <li>No chat messages found for this appointment.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="app-body-sidebar">
+                <section class="payment-section">
+                    <h2>Actions</h2>
+                    <div class="payment-section-header">
+                        <p>Manage this appointment.</p>
+                    </div>
+                    <div class="payments">
+                        {% if user.role == 'doctor' %}
+                            <button class="icon-button" onclick="viewPatientRecords()">
+                                <ion-icon name="clipboard-outline"></ion-icon>
+                                <span>View Patient’s Records</span>
+                            </button>
+                            <button class="icon-button" onclick="writeFindings()">
+                                <ion-icon name="create-outline"></ion-icon>
+                                <span>Write Findings</span>
+                            </button>
+                            <button class="icon-button" onclick="issuePrescription()">
+                                <ion-icon name="document-text-outline"></ion-icon>
+                                <span>Issue Prescription</span>
+                            </button>
+                            <button class="icon-button" onclick="setServiceCost()">
+                                <ion-icon name="pricetag-outline"></ion-icon>
+                                <span>Set Service Cost</span>
+                            </button>
+                            <button class="icon-button" onclick="endService()">
+                                <ion-icon name="close-outline"></ion-icon>
+                                <span>End the Service</span>
+                            </button>
+                        {% elif user.role == 'patient' %}
+                            <button class="icon-button" onclick="endService()">
+                                <ion-icon name="close-outline"></ion-icon>
+                                <span>End the Service</span>
+                            </button>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleProfileDropdown() {
+            document.getElementById("profileDropdown").classList.toggle("show");
+        }
+        function toggleSidebar() {
+            document.querySelector('.app-body-navigation').classList.toggle('collapsed');
+            document.querySelector('.app-body-main-content').classList.toggle('expanded');
+        }
+        function toggleSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.focus();
+        }
+        function viewPatientRecords() {
+            alert('Viewing patient records...');
+        }
+        function writeFindings() {
+            alert('Writing findings...');
+        }
+        function issuePrescription() {
+            window.location.href = `{% url 'issue_prescription' booking.pk %}`;
+        }
+        function setServiceCost() {
+            alert('Setting service cost...');
+        }
+        function endService() {
+            const appointmentId = '{{ appointment.pk }}';
+            fetch(`/end-service/${appointmentId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "patient_dashboard" %}';
+                } else {
+                    alert('Failed to end service');
+                }
+            });
+        }
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-profile')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

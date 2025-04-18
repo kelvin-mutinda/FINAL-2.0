@@ -1,0 +1,23 @@
+<!-- luminous_clinic_project/luminous_clinic/templates/doctor_profile_setup.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Profile Setup</title>
+    <link rel="stylesheet" href="{% static 'css/doctor_profile_setup.css' %}">
+</head>
+<body>
+    <header>
+        <a href="{% url 'landing_page' %}" class="home-button">Home</a>
+    </header>
+    <div class="setup-container">
+        <h1>Complete Your Profile</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Save</button>
+        </form>
+    </div>
+</body>
+</html>

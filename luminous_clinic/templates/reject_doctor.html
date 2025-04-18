@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reject Doctor</title>
+    <link rel="stylesheet" href="{% static 'css/reject_doctor.css' %}">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <h1>Reject Doctor</h1>
+        </header>
+        <div class="app-body-main-content">
+            <h2>Reject {{ doctor.full_name }}</h2>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <label for="reason">Reason for Rejection:</label>
+                <textarea id="reason" name="reason" rows="5" placeholder="Please provide a detailed reason..." required></textarea>
+                <button type="submit">Reject</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

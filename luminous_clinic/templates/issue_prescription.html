@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Issue Prescription</title>
+    <link rel="stylesheet" href="{% static 'css/prescription.css' %}">
+</head>
+<body>
+    <h1>Issue Prescription for {{ appointment.patient.full_name }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Issue Prescription</button>
+    </form>
+</body>
+</html>
